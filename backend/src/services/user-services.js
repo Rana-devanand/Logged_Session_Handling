@@ -7,23 +7,10 @@ const {JWT_SECRET_KEY} = require("../config/server.config")
 class UserServices {
     async createUser(userData) {
         try {
-            console.log("user data: ",userData);
-            const UserPassword = userData.Password;
-            console.log("User Password " ,UserPassword)
-            const hashedPassword = await this.hashedPassword(UserPassword);
-
-            const createUser = await user.create({
-                Name : userData.Name,
-                Email : userData.Email,
-                Password : hashedPassword,
-                CPassword : hashedPassword
-            })
-            const token = await this.generate_JWT_Token();
-            console.log(token);
-            return json({
-                user : createUser,
-                token : token,            
-            });
+            const hashedPassword = await this.hashedPassword(userData.Password);
+            const updateUserData = {...userData, Password: hashedPassword};
+            const response = await user.create(updateUserData);
+            return response;
         } catch (error) {
             console.error(error)
             throw new Error("Failed to create user")
@@ -40,10 +27,46 @@ class UserServices {
         }
     }
 
-    async generate_JWT_Token(){
-        return jwt.sign({
-            token : JWT_SECRET_KEY,
-        })
+    async generate_JWT_Token(userEmail){
+        console.log("Generating JWT token", userEmail)
+        return jwt.sign(
+            {
+                email: userEmail,
+                token: JWT_SECRET_KEY,
+            },
+            JWT_SECRET_KEY,
+            { expiresIn: '10m' }  // Token will expire in 10 minutes
+        )
+    }
+
+    verifyPassword(plainPassword , encryptedPassword){
+        return bcrypt.compareSync(plainPassword, encryptedPassword);
+    }
+
+    async loginUser(userData) {
+        try {
+           console.log(userData);
+           const IsValidEmail = await user.findOne({
+            where :{
+                Email : userData.Email,
+            }
+           })
+            if (!IsValidEmail) {
+                throw new Error("Invalid email");
+            }
+            const IsValidPassword = this.verifyPassword(userData.Password , IsValidEmail.Password)
+            if (!IsValidPassword) {
+                throw new Error("Invalid password");
+            }
+           
+            const token = await this.generate_JWT_Token(userData.Email);
+            return {
+                user : IsValidEmail,
+                token: token,
+            };
+        } catch (error) {
+            throw new Error("Failed to login user");
+        }
     }
 }
 

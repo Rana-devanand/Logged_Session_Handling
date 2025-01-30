@@ -2,6 +2,10 @@
 const {
   Model
 } = require('sequelize');
+
+const bcrypt = require('bcrypt');
+const {SALT} = require("../config/server.config")
+
 module.exports = (sequelize, DataTypes) => {
   class user extends Model {
     /**
@@ -17,16 +21,6 @@ module.exports = (sequelize, DataTypes) => {
     Name: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
-      validate: {
-        // isAlpha: {
-        //   args: true,
-        //   msg: 'Name should only contain alphabetic characters.'
-        // },
-        notEmpty: {
-          msg: 'Name cannot be empty.'
-        }
-      }
     },
     Email: {
       type: DataTypes.STRING,
@@ -36,37 +30,12 @@ module.exports = (sequelize, DataTypes) => {
         isEmail: {
           args: true,
           msg: 'Email is not in valid format.'
-        },
-        notEmpty: {
-          msg: 'Email cannot be empty.'
         }
       }
     },
     Password: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: 'Password cannot be empty.'
-        },
-        // isLength: {
-        //   args: [6, 20],
-        //   msg: 'Password must be between 6 and 20 characters long.'
-        // }
-      }
-    },
-    CPassword: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        notEmpty: {
-          msg: 'Confirm Password cannot be empty.'
-        },
-        // isEqual: {
-        //   args: sequelize.col('Password'),
-        //   msg: 'Confirm Password does not match with Password.'
-        // }
-      }
     }
   }, {
     sequelize,
