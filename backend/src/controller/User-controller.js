@@ -1,9 +1,9 @@
 const UserServices = require('../services/user-services');
 const userService = new UserServices();
 const { validationResult } = require("express-validator");
+const redisClient = require("../services/redis.services");
 
-
-const create = async(req, res) => {
+const create = async (req, res) => {
     try {
         const errors = validationResult(req);
         if(!errors.isEmpty()){
@@ -31,6 +31,17 @@ const login = async (req, res) => {
     }
 }
 
+const logout = async(req,res) => {
+    try {
+        const token = req.cookies.token || req.headers.authorization.split(' ')[1];
+        await redisClient.set(token, 'logout', 'EX', 600); // 600 seconds = 10 minutes
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Failed to logout' });
+    }
+}
+
 const userprofile = async (req, res) =>{
     console.log(req.user)
     res.status(200).json({
@@ -41,5 +52,6 @@ const userprofile = async (req, res) =>{
 module.exports = {
     create,
     login,
+    logout,
     userprofile,
 }

@@ -53,6 +53,7 @@ class UserServices {
               plainPassword,
               isValidEmail.Password,
          )
+         console.log("Passwords match ", passwordMatch);
 
          if (!passwordMatch) {
               return { error: 'Password does not match' }

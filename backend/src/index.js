@@ -1,7 +1,9 @@
 const express = require('express');
-const expressSession = require('express-session');
 const app = express();
+const cors = require('cors');
 
+app.use(cors());
+const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const ApiRoute = require("./routes/index")
@@ -9,6 +11,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(morgan('tiny'));
 app.use(cookieParser());
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 // app.use('/', (req,res) => {
 //     res.send("Welcome to the Express session")
 // })

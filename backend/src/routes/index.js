@@ -4,16 +4,6 @@ const UserController = require("../controller/User-controller");
 const userMiddleware = require("../Middleware/user.middleware");
 const { body } = require("express-validator");
 
-const bcrypt = require("bcrypt");
-
-router.post("/hash" , async (req, res) => {
-  const password = await req.body.password;
-  console.log(password);
-  const hashedPassword = await bcrypt.hash(password, bcrypt.genSaltSync(10));
-  console.log(hashedPassword);
-})
-
-
 
 router.post(
   "/register",
@@ -35,4 +25,5 @@ router.post(
 
 router.post("/profile", userMiddleware.userAuth, UserController.userprofile);
 
+router.get('/logout' , userMiddleware.userAuth , UserController.logout);
 module.exports = router;
