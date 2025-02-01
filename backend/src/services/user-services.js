@@ -7,9 +7,7 @@ const {JWT_SECRET_KEY} = require("../config/server.config")
 class UserServices {
     async createUser(userData) {
         try {
-            const hashedPassword = await this.hashedPassword(userData.Password);
-            const updateUserData = {...userData, Password: hashedPassword};
-            const response = await user.create(updateUserData);
+            const response = await user.create(userData);
             return response;
         } catch (error) {
             console.error(error)
@@ -17,18 +15,8 @@ class UserServices {
         }
     }
 
-    async hashedPassword(userPassword) {
-        try {
-            const hashedPassword = await bcrypt.hash(userPassword, SALT)
-            return hashedPassword;
-        } catch (error) {
-            console.error(error)
-            throw new Error("Failed to hash password")
-        }
-    }
-
     async generate_JWT_Token(userEmail){
-        console.log("Generating JWT token", userEmail)
+        // console.log("Generating JWT token", userEmail)
         return jwt.sign(
             {
                 email: userEmail,
@@ -39,35 +27,46 @@ class UserServices {
         )
     }
 
-    verifyPassword(plainPassword , encryptedPassword){
-        return bcrypt.compareSync(plainPassword, encryptedPassword);
+    async verifyPassword (plainPassword , hashPassword) { 
+        const isMatch = await bcrypt.compare(plainPassword, hashPassword)
+        return isMatch // true or false
     }
 
-    async loginUser(userData) {
-        try {
-           console.log(userData);
-           const IsValidEmail = await user.findOne({
-            where :{
-                Email : userData.Email,
-            }
-           })
-            if (!IsValidEmail) {
-                throw new Error("Invalid email");
-            }
-            const IsValidPassword = this.verifyPassword(userData.Password , IsValidEmail.Password)
-            if (!IsValidPassword) {
-                throw new Error("Invalid password");
-            }
-           
-            const token = await this.generate_JWT_Token(userData.Email);
-            return {
-                user : IsValidEmail,
-                token: token,
-            };
-        } catch (error) {
-            throw new Error("Failed to login user");
-        }
+   async getByEmail(email){
+    try {
+         return await user.findOne({ where: { email } });
+    } catch (error) {
+         console.log("Something went wrong in getByEmail", error);
     }
+   }
+
+   async loginUser(email, plainPassword) {
+    try {
+
+         const isValidEmail = await this.getByEmail(email);
+         
+         if(!isValidEmail) {
+              return { error : "Email does't exist!"}
+         }
+
+         const passwordMatch = await this.verifyPassword(
+              plainPassword,
+              isValidEmail.Password,
+         )
+
+         if (!passwordMatch) {
+              return { error: 'Password does not match' }
+         }
+
+         const token = await this.generate_JWT_Token(email);
+         return { 
+                user: isValidEmail, 
+                token: token,
+            }
+    } catch (error) {
+         console.log("Something went wrong in service", error);
+    }
+}
 }
 
 module.exports = UserServices;

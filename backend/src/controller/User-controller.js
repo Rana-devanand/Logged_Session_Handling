@@ -1,8 +1,14 @@
 const UserServices = require('../services/user-services');
 const userService = new UserServices();
+const { validationResult } = require("express-validator");
+
 
 const create = async(req, res) => {
     try {
+        const errors = validationResult(req);
+        if(!errors.isEmpty()){
+            return res.status(400).json({error :errors.array()});
+        }
         const response = await userService.createUser(req.body);
         res.status(201).json(response);
     } catch (error) {
@@ -13,7 +19,11 @@ const create = async(req, res) => {
 
 const login = async (req, res) => {
     try {
-        const response = await userService.loginUser(req.body);
+        const errors = validationResult(req);
+        if(!errors.isEmpty()){
+            return res.status(400).json({errors: errors.array()});
+        } 
+        const response = await userService.loginUser(req.body.Email , req.body.Password);
         res.status(200).json(response);
     } catch (error) {
         console.log(error);
